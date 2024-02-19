@@ -1,0 +1,15 @@
+# Utiliser une image de base avec Node.js
+FROM node:14-slim
+
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /app
+
+# Copier les dépendances de l'application Node.js et installer les modules nécessaires
+COPY package.json package-lock.json ./
+RUN npm install --only=prod
+
+# Copier le reste de l'application dans le conteneur
+COPY . .
+
+# Définir la commande par défaut pour exécuter l'application Node.js
+CMD ["node", "result.js"]
