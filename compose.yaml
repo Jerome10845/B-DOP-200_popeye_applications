@@ -1,41 +1,58 @@
-version: '3.8'
+version: '3'
 
 services:
   poll:
-    build:
-      context: ./poll
-      dockerfile: Dockerfile
+    build: ./poll
     ports:
-      - "5000:5000"
+      - "5000:80"
+    networks:
+      - poll-tier
     depends_on:
       - redis
 
   redis:
     image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - poll-tier
 
   worker:
-    build:
-      context: ./worker
-      dockerfile: Dockerfile
+    build: ./worker
+    networks:
+      - back-tier
     depends_on:
       - redis
+      - db
 
   db:
     image: postgres:alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
-    volumes:
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    ports:
-      - "5432:5432"
+    networks:
+      - back-tier
+      - result-tier
 
   result:
-    build:
-      context: ./result
-      dockerfile: Dockerfile
+    build: ./result
     ports:
-      - "3000:3000"
+      - "5001:80"
+    networks:
+      - result-tier
     depends_on:
       - db
+
+networks:
+  poll-tier:
+  result-tier:
+  back-tier:
+
+volumes:
+  db-data:

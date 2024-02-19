@@ -1,15 +1,17 @@
-# Utiliser une image de base avec Node.js
-FROM node:14-slim
+# Utiliser l'image Node.js officielle basée sur Alpine
+FROM node:12-alpine
 
 # Définir le répertoire de travail dans le conteneur
-WORKDIR /app
+WORKDIR /result
 
-# Copier les dépendances de l'application Node.js et installer les modules nécessaires
-COPY package.json package-lock.json ./
-RUN npm install --only=prod
-
-# Copier le reste de l'application dans le conteneur
+# Copier les fichiers de l'application
 COPY . .
 
-# Définir la commande par défaut pour exécuter l'application Node.js
-CMD ["node", "result.js"]
+# Installer les dépendances de l'application
+RUN npm install
+
+# Exposer le port 80
+EXPOSE 80
+
+# Commande pour démarrer l'application
+CMD ["node", "app.js"]

@@ -1,11 +1,29 @@
-# Utiliser une image de base avec Java
-FROM openjdk:11-jre-slim
+# Première étape: Compilation
+FROM maven:3.8.4-jdk-11-slim AS builder
 
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Copier l'application Java compilée dans le conteneur
-COPY target/worker.jar .
+# Copier le fichier pom.xml
+COPY pom.xml .
 
-# Définir la commande par défaut pour exécuter l'application Java
-CMD ["java", "-jar", "worker.jar"]
+# Résoudre les dépendances
+RUN mvn dependency:resolve
+
+# Copier le reste des sources
+COPY src ./src
+
+# Package de l'application
+RUN mvn package
+
+# Deuxième étape: Exécution
+FROM openjdk:11-jre-slim
+
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /worker
+
+# Copier le fichier JAR depuis l'étape précédente
+COPY --from=builder /app/target/worker-jar-with-dependencies.jar .
+
+# Commande pour exécuter l'application
+CMD ["java", "-jar", "worker-jar-with-dependencies.jar"]
